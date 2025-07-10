@@ -1,12 +1,217 @@
-# React + Vite
+# 🌱 에코스왑
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📚 목차
 
-Currently, two official plugins are available:
+- 주요 기능
+- 기술 스택
+- 프로젝트 구조
+- 설치 및 실행 방법
+- 팀원 및 역할 분담
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 주요 기능
 
-## Expanding the ESLint configuration
+### 1. 사용자 인증
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- 회원가입 및 로그인
+- 이메일, 비밀번호 유효성 검사
+- 토큰 기반 인증 시스템
+
+### 2. 홈 피드
+
+- 다른 사용자들이 등록한 게시물 확인
+- 무한 스크롤로 추가 게시물 로드
+
+### 3. 검색
+
+- 사용자 이름 또는 계정 검색
+- 검색어 하이라이팅 기능
+
+### 4. 프로필
+
+- 사용자 정보 표시 및 수정
+- 팔로워/팔로잉 관계 설정
+- 사용자가 등록한 상품 및 게시물 목록
+
+### 5. 상품
+
+- 상품 등록 및 수정
+- 이미지 업로드
+- 가격, 설명 등 상세 정보 입력
+
+### 6. 게시물
+
+- 텍스트 및 이미지 게시물 작성
+- 좋아요 및 댓글 기능
+- 게시물 수정 및 삭제
+
+### 7. 채팅 (UI만 구현)
+
+- 채팅 목록 확인
+- 1:1 채팅방
+- 읽지 않은 메시지 표시
+
+## 💻 기술 스택
+
+- **프론트엔드** : React, React Router, Context API
+- **스타일링** : CSS, CSS Module
+- **상태 관리** : Context API, useState, useEffect
+- **HTTP 클라이언트** : Fetch API
+- **이미지 처리** : Blob URL, FormData
+- **개발 도구** : Vite, ESLint, Prettier
+
+## 📁 프로젝트 구조
+
+**mandarin_market/**
+
+**├── public/**
+
+**├── src/**
+
+**│ ├── assets/**
+
+**│ │ ├── images/**
+
+**│ ├── components/**
+
+**│ │ ├── common/**
+
+**│ │ │ ├── Footer.jsx**
+
+**│ │ │ ├── Header.jsx**
+
+**│ │ │ ├── SearchHeader.jsx**
+
+**│ │ ├── profile/**
+
+**│ │ │ ├── ProfileInfo.jsx**
+
+**│ │ │ ├── ProductList.jsx**
+
+**│ │ ├── post/**
+
+**│ │ ├── product/**
+
+**│ ├── context/**
+
+**│ │ ├── UserContext.jsx**
+
+**│ ├── pages/**
+
+**│ │ ├── HomePage.jsx**
+
+**│ │ ├── LoginPage.jsx**
+
+**│ │ ├── SignupPage.jsx**
+
+**│ │ ├── ProfilePage.jsx**
+
+**│ │ ├── PostUploadPage.jsx**
+
+**│ │ ├── SearchPage.jsx**
+
+**│ │ ├── ChatListPage.jsx**
+
+**│ │ ├── ChatRoomPage.jsx**
+
+**│ ├── styles/**
+
+**│ │ ├── HomePage.css**
+
+**│ │ ├── ChatListPage.css**
+
+**│ │ ├── ChatRoomPage.css**
+
+**│ ├── utils/**
+
+**│ │ ├── imageUrl.js**
+
+**│ │ ├── validation.js**
+
+**│ ├── App.jsx**
+
+**│ ├── main.jsx**
+
+**├── .eslintrc.js**
+
+**├── .prettierrc**
+
+**├── package.json**
+
+**├── vite.config.js**
+
+**└── README.md**
+
+## 📝 구현 과정 및 문제 해결
+
+### CORS 이슈 해결
+
+- 이미지 로딩 시 발생하는 CORS 문제는 프록시 설정과 상대 경로 요청으로 해결했습니다.
+- `/utils/imageUrl.js` 파일에서 이미지 경로 처리 로직을 통합 관리하여 일관된 해결책을 제공합니다.
+
+### 이미지 처리
+
+- 다양한 형식의 이미지 URL을 처리할 수 있도록 유연한 로직을 구현했습니다.
+- 이미지 로드 실패 시 기본 이미지로 대체하는 방어적 코딩을 적용했습니다.
+
+### 데이터 관리
+
+- Context API를 활용하여 전역 상태(사용자 정보 등)를 효율적으로 관리했습니다.
+- 각 컴포넌트의 책임을 명확히 분리하여 유지보수성을 향상시켰습니다.
+
+## 🌟 추가 개발 계획
+
+1. **실시간 채팅 기능 구현**
+   - Socket.IO를 활용한 실시간 메시지 전송 기능
+2. **검색 기능 강화**
+   - 상품 및 게시물 검색 기능 추가
+   - 필터링 및 정렬 옵션 제공
+3. **반응형 디자인 개선**
+   - 다양한 디바이스에서의 사용자 경험 최적화
+4. **성능 최적화**
+   - 이미지 지연 로딩 구현
+   - 컴포넌트 메모이제이션을 통한 렌더링 성능 향상
+
+## 📝 구현 과정 및 문제 해결
+
+### CORS 이슈 해결
+
+- 이미지 로딩 시 발생하는 CORS 문제는 프록시 설정과 상대 경로 요청으로 해결했습니다.
+- `/utils/imageUrl.js` 파일에서 이미지 경로 처리 로직을 통합 관리하여 일관된 해결책을 제공합니다.
+
+### 이미지 처리
+
+- 다양한 형식의 이미지 URL을 처리할 수 있도록 유연한 로직을 구현했습니다.
+- 이미지 로드 실패 시 기본 이미지로 대체하는 방어적 코딩을 적용했습니다.
+
+### 데이터 관리
+
+- Context API를 활용하여 전역 상태(사용자 정보 등)를 효율적으로 관리했습니다.
+- 각 컴포넌트의 책임을 명확히 분리하여 유지보수성을 향상시켰습니다.
+
+## 🌟 추가 개발 계획
+
+1. **실시간 채팅 기능 구현**
+   - Socket.IO를 활용한 실시간 메시지 전송 기능
+2. **검색 기능 강화**
+   - 상품 및 게시물 검색 기능 추가
+   - 필터링 및 정렬 옵션 제공
+3. **반응형 디자인 개선**
+   - 다양한 디바이스에서의 사용자 경험 최적화
+4. **성능 최적화**
+   - 이미지 지연 로딩 구현
+   - 컴포넌트 메모이제이션을 통한 렌더링 성능 향상
+
+```
+
+```
+
+## 👥 팀원 및 역할
+
+| 이름 | 역할 | 담당 역할 |
+
+| -------- | -------- | --------- |
+
+| [정승훈] | Frontend | 기능구현 |
+
+| [김현미] | Frontend | 마크업 |
+"# est_final_pr" 
