@@ -1,0 +1,28 @@
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid #dbdbdb;
+  background-color: #fff;
+  z-index: 10;
+  box-sizing: border-box;
+}
+
+.app-title {
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.search-icon {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}

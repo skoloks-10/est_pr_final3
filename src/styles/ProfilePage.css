@@ -1,0 +1,42 @@
+.profile-page-container {
+  min-height: 100vh; /* 최소 높이를 화면 전체 높이로 설정하여 공백이 보이지 않게 합니다. */
+  display: flex;
+  flex-direction: column;
+  background-color: #f2f2f2; /* 전체 배경색 */
+}
+
+.profile-page-main {
+  flex-grow: 1; /* 헤더와 푸터를 제외한 모든 공간을 차지하도록 합니다. */
+  padding-bottom: 60px; /* Footer 높이만큼 여백 */
+}
+
+/* 모든 섹션의 공통 부모는 흰색 배경을 가집니다. */
+.profile-page-main > * {
+  background-color: #fff;
+}
+
+/* 섹션 제목 스타일 */
+.section-title {
+  font-size: 16px;
+  font-weight: 700;
+  padding: 20px 16px 16px;
+  margin: 0;
+}
+
+/* 상품 섹션 스타일 */
+.product-section {
+  margin-top: 6px; /* 프로필 정보와 상품 섹션 사이의 회색 여백 */
+  padding-bottom: 20px;
+}
+
+/* 게시물 섹션 스타일 */
+.post-section {
+  margin-top: 6px; /* 상품 섹션과 게시물 섹션 사이의 회색 여백 */
+  padding-top: 12px;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  color: #767676;
+}

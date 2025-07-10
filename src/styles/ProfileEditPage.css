@@ -1,0 +1,135 @@
+.profile-edit-container {
+  max-width: 400px;
+  width: 100vh;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #fff;
+}
+
+.profile-edit-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+
+  /* 넓은 화면에서도 중앙에 위치하도록 수정 */
+  position: fixed;
+  top: 0;
+  max-width: 450px;
+  width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #fff;
+  z-index: 10;
+}
+
+.back-button {
+  width: 22px;
+  height: 22px;
+  background: url("../assets/images/icon-arrow-left.png") no-repeat center /
+    contain;
+  border: none;
+  cursor: pointer;
+}
+
+.save-button {
+  padding: 7px 28px;
+  background-color: var(--main-color);
+  color: white;
+  border: none;
+  border-radius: 32px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.save-button:disabled {
+  background-color: #ffc7a7;
+  cursor: not-allowed;
+}
+
+.profile-edit-main {
+  padding: 80px 34px 30px;
+  width: 100%;
+}
+
+.image-upload-section {
+  position: relative;
+  width: 110px;
+  height: 110px;
+  margin: 0 auto 30px;
+}
+
+.image-upload-label {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.profile-image-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #f2f2f2; /* 기본 배경색 */
+  border: 1px solid var(--border-color);
+}
+
+.image-upload-icon {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.input-group {
+  margin-bottom: 24px; /* 그룹 간 간격 조정 */
+}
+
+.input-group label {
+  display: block;
+  font-size: 12px;
+  color: var(--text-color-gray);
+  margin-bottom: 6px; /* 레이블과 입력창 사이 간격 */
+}
+
+.input-group input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--border-color);
+  padding: 8px 0; /* 위아래 패딩 추가 */
+  font-size: 14px;
+  background-color: transparent;
+}
+
+.input-group input::placeholder {
+  color: #dbdbdb;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-bottom: 1px solid var(--main-color);
+}
+
+/* 안내 문구와 에러 메시지를 위한 스타일 */
+.message-area {
+  font-size: 12px;
+  margin-top: 6px;
+  height: 14px; /* 메시지 영역 높이 고정 (레이아웃 밀림 방지) */
+}
+
+.helper-text {
+  color: var(--text-color-gray);
+}
+
+.error-message {
+  color: #eb5757;
+}

@@ -1,0 +1,149 @@
+.profile-header {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 390px;
+  height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: var(--background-color);
+  z-index: 10;
+  box-sizing: border-box;
+}
+.back-button,
+.more-button {
+  width: 22px;
+  height: 22px;
+}
+
+/* --- Modal 스타일 --- */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+}
+
+.modal-content {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  background-color: white;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  padding: 36px 0 16px;
+  box-sizing: border-box;
+  animation: slideUp 0.3s ease-out;
+}
+
+.modal-handle {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 50px;
+  height: 4px;
+  background-color: #dbdbdb;
+  border-radius: 2px;
+}
+
+.modal-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.modal-content button {
+  width: 100%;
+  padding: 14px 26px;
+  text-align: left;
+  font-size: 14px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.modal-content button:hover {
+  background-color: #f2f2f2;
+}
+
+/* --- Alert 스타일 --- */
+.alert-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.alert-content {
+  width: 252px;
+  background-color: white;
+  border-radius: 10px;
+  overflow: hidden;
+  animation: fadeIn 0.2s ease-in;
+}
+
+.alert-message {
+  padding: 22px 0;
+  font-size: 16px;
+  font-weight: 500;
+  text-align: center;
+  border-bottom: 0.5px solid #dbdbdb;
+}
+
+.alert-buttons {
+  display: flex;
+}
+
+.alert-buttons button {
+  width: 50%;
+  padding: 14px 0;
+  font-size: 14px;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.alert-buttons button:first-child {
+  border-right: 0.5px solid #dbdbdb;
+}
+
+.alert-buttons button.confirm {
+  color: #0b4d22;
+  font-weight: 500;
+}
+
+/* --- 애니메이션 --- */
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

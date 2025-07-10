@@ -1,0 +1,90 @@
+.post-detail-container {
+  padding-bottom: 60px; /* 댓글 입력창 높이만큼 여백 */
+}
+.post-detail-header {
+  /* ... 기존 헤더 스타일 ... */
+}
+.post-detail-main {
+  padding: 20px 16px;
+}
+.comment-list-container {
+  border-top: 1px solid var(--border-color);
+  padding-top: 20px;
+}
+.comment-item {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.comment-author-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.comment-content-wrap {
+  flex-grow: 1;
+}
+.comment-author-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.comment-author-name {
+  font-size: 14px;
+  font-weight: 500;
+}
+.comment-time {
+  font-size: 10px;
+  color: var(--text-color-gray);
+}
+.comment-text {
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-all;
+}
+.more-button-comment {
+  align-self: flex-start;
+  padding: 0;
+  background: none;
+  border: none;
+}
+.comment-form-container {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  max-width: 450px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border-color);
+  background-color: #fff;
+}
+.my-profile-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.comment-input {
+  flex-grow: 1;
+  border: none;
+  background: none;
+  font-size: 14px;
+}
+.comment-input::placeholder {
+  color: var(--border-color);
+}
+.comment-submit-button {
+  background: none;
+  border: none;
+  color: var(--main-color);
+  font-size: 14px;
+}
+.comment-submit-button:disabled {
+  color: var(--light-main-color);
+}

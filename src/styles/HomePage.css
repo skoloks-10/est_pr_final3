@@ -1,0 +1,114 @@
+.home-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  background-color: white;
+}
+
+.home-container {
+  padding-top: 48px; /* 헤더 높이만큼 패딩 */
+}
+
+.home-main-content {
+  flex-grow: 1;
+  /* 
+    핵심 수정사항:
+    - 헤더 높이(48px)만큼 상단 여백을 추가하여 내용이 가려지지 않게 합니다.
+    - 푸터 높이(60px)만큼 하단 여백을 추가하여 마지막 게시물이 가려지지 않게 합니다.
+  */
+  padding-top: 48px;
+  padding-bottom: 60px;
+}
+
+.home-header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  max-width: 450px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: #fff;
+  z-index: 10;
+}
+
+.home-header h1 {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.search-button {
+  width: 24px;
+  height: 24px;
+}
+
+.home-main {
+  padding: 20px 16px;
+}
+
+/* 피드가 비어있을 때의 스타일 */
+.empty-feed {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* 화면의 남은 공간을 모두 차지하도록 설정 */
+  height: calc(100vh - 48px - 60px);
+}
+
+.empty-feed-icon {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+}
+
+.empty-feed p {
+  color: var(--text-color-gray);
+  margin-bottom: 20px;
+}
+
+.empty-feed .search-button {
+  width: 120px;
+  height: 44px;
+  background-color: var(--main-color);
+  color: white;
+  border-radius: 44px;
+  font-size: 14px;
+}
+
+.loading-message {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 48px - 60px);
+  color: var(--text-color-gray);
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-color-gray);
+}
+
+.no-feed {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 120px); /* 헤더, 네비바 높이 제외 */
+  gap: 20px;
+  color: var(--text-color-gray);
+}
+
+.go-search-button {
+  padding: 12px 24px;
+  background-color: var(--main-color);
+  color: white;
+  border-radius: 30px;
+  text-decoration: none;
+}

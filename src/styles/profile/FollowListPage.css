@@ -1,0 +1,15 @@
+.follow-list-page-container {
+  padding-top: 48px;
+  padding-bottom: 60px;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+.follow-list-main {
+  max-width: 390px;
+  margin: 0 auto;
+}
+.no-users-message {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-color-gray);
+}

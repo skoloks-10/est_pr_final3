@@ -1,0 +1,21 @@
+.splash-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100%;
+  background-color: #fff;
+}
+
+.splash-logo {
+  width: 150px;
+  height: auto;
+  margin-bottom: 20px;
+}
+
+.splash-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #0b4d22; /* 감귤마켓 메인 컬러 */
+}
