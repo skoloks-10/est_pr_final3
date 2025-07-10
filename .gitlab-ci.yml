@@ -1,4 +1,4 @@
-image: node:16.5.0
+image: node:lts
 pages:
   stage: deploy
   cache:
