@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { HashRouter as Router, Routes, Route } from "react-router-dom";
 import { UserProvider } from "./context/UserContext"; // 1. UserProvider를 import 합니다.
 import "./App.css"; // App.css import 추가
 
