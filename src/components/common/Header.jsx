@@ -6,7 +6,7 @@ import searchIcon from "../../assets/images/icon-search.png";
 const Header = () => {
   return (
     <header className="app-header">
-      <h1 className="app-title">에코스왑 피드</h1>
+      <h1 className="app-title">중고스왑 피드</h1>
       <Link to="/search">
         <img src={searchIcon} alt="검색" className="search-icon" />
       </Link>

@@ -10,7 +10,7 @@ const UserListItem = ({ user, onFollowToggle, listType }) => {
 
   const handleFollow = async () => {
     const token = localStorage.getItem("token");
-    // 2. 현재 isFollowing 상태에 따라 'unfollow' 또는 'follow' 액션을 결정합니다.
+
     const action = isFollowing ? "unfollow" : "follow";
     const method = isFollowing ? "DELETE" : "POST";
     console.log("버튼 클릭 전 상태:", isFollowing);
@@ -66,11 +66,11 @@ const UserListItem = ({ user, onFollowToggle, listType }) => {
     <div className="user-list-item">
       <Link to={`/profile/${user.accountname}`} className="user-link">
         <img
-          // 3. generateImageUrl 함수를 사용하여 올바른 이미지 주소 생성
           src={generateImageUrl(user.image)}
           alt={`${user.username}의 프로필`}
           className="user-image"
-          onError={handleImgError} // 4. 이미지 로딩 실패 대비
+          crossOrigin="anonymous"
+          onError={handleImgError}
         />
         <div className="user-details">
           <p className="user-name">{user.username}</p>
@@ -83,7 +83,6 @@ const UserListItem = ({ user, onFollowToggle, listType }) => {
           onClick={handleFollow}
           className={`follow-button ${isFollowing ? "cancel" : ""}`}
         >
-          {/* isFollowing 상태에 따라 '취소' 또는 '팔로우' 텍스트가 표시됩니다. */}
           {isFollowing ? "취소" : "팔로우"}
         </button>
       )}

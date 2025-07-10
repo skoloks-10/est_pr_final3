@@ -89,17 +89,19 @@ const ProfileSetupPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    let finalImageUrl = "";
+    if (!isFormValid) {
+      alert("입력 양식을 올바르게 작성해주세요.");
+      return;
+    }
 
-    // 사용자가 새 이미지를 선택한 경우에만 API 호출
-    if (imageFile) {
-      // 1. FormData 객체 생성
-      const formData = new FormData();
-      // 2. 'image'라는 key로 이미지 파일을 body에 추가 (API 명세와 일치)
-      formData.append("image", imageFile);
-      try {
-        // 3. API 호출 (URL, Method 일치)
-        // Content-Type 헤더는 FormData를 body로 사용할 때 브라우저가 자동으로 설정하므로, 수동으로 추가하지 않는 것이 올바른 방법입니다.
+    let finalImageUrl = image; // 기본 이미지 또는 사용자가 선택한 미리보기 이미지로 시작
+
+    try {
+      // 사용자가 새 이미지를 선택한 경우에만 업로드 API 호출
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+
         const imgRes = await fetch(
           "https://dev.wenivops.co.kr/services/mandarin/image/uploadfile",
           {
@@ -107,36 +109,49 @@ const ProfileSetupPage = () => {
             body: formData,
           }
         );
-        const imgData = await imgRes.json();
-        // 4. 성공 응답(Res)에서 'filename'을 사용하여 이미지 URL 생성
-        if (imgData.filename) {
-          finalImageUrl =
-            "https://dev.wenivops.co.kr/services/mandarin/" + imgData.filename;
-        } else {
-          // ... (업로드 실패 시 예외 처리) ...
+
+        if (!imgRes.ok) {
+          const errorData = await imgRes.json();
+          throw new Error(errorData.message || "이미지 업로드에 실패했습니다.");
         }
-        // eslint-disable-next-line no-unused-vars
-      } catch (error) {
-        // ... (네트워크 오류 등 예외 처리) ...
+
+        const imgData = await imgRes.json();
+        let filename = "";
+
+        // { info: { filename: '...' } } 형식 응답 처리
+        if (
+          imgData &&
+          imgData.info &&
+          typeof imgData.info === "object" &&
+          !Array.isArray(imgData.info)
+        ) {
+          filename = imgData.info.filename;
+        }
+        // 기존 { filename: '...' } 형식 응답 처리 (하위 호환)
+        else if (imgData.filename) {
+          filename = imgData.filename;
+        }
+
+        if (filename) {
+          finalImageUrl = `https://dev.wenivops.co.kr/services/mandarin/${filename}`;
+        } else {
+          throw new Error("서버 응답에서 이미지 파일명을 찾을 수 없습니다.");
+        }
       }
-    } else {
-      // ... (이미지를 선택하지 않은 경우) ...
-    }
 
-    // 2. 요청 본문(Body) 생성: API 명세와 동일한 구조로 데이터를 구성합니다.
-    const userData = {
-      user: {
-        username,
-        email,
-        password,
-        accountname,
-        intro,
-        image: finalImageUrl,
-      },
-    };
+      // 회원가입 데이터 구성
+      const userData = {
+        user: {
+          username,
+          email,
+          password,
+          accountname,
+          intro,
+          image: finalImageUrl,
+        },
+      };
 
-    try {
-      // 3. API 호출: 명세에 맞는 URL, 메소드, 헤더, 본문을 사용하여 서버에 요청합니다.
+      // 회원가입 API 호출
       const res = await fetch(
         "https://dev.wenivops.co.kr/services/mandarin/user",
         {
@@ -145,16 +160,17 @@ const ProfileSetupPage = () => {
           body: JSON.stringify(userData),
         }
       );
+
       const data = await res.json();
-      if (data.user) {
+      if (res.ok && data.user) {
         alert("회원가입이 완료되었습니다. 로그인 해주세요.");
         navigate("/login");
       } else {
-        alert(`회원가입 실패: ${data.message}`);
+        throw new Error(data.message || "회원가입에 실패했습니다.");
       }
-      // eslint-disable-next-line no-unused-vars
     } catch (error) {
-      alert("회원가입 중 오류가 발생했습니다.");
+      console.error("회원가입 처리 중 오류:", error);
+      alert(error.message);
     }
   };
 

@@ -76,3 +76,29 @@
   width: 20px;
   height: 20px;
 }
+
+/* 팔로워, 프로필 이미지, 팔로잉을 감싸는 컨테이너 */
+.profile-stats {
+  display: flex;
+  justify-content: center;
+  align-items: center; /* <<< 이 속성이 세로 중앙 정렬을 담당합니다. */
+  gap: 40px; /* 요소들 사이의 간격 */
+  margin-bottom: 16px;
+}
+
+/* 팔로워/팔로잉 링크 공통 스타일 */
+.follow-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: #767676;
+  font-size: 10px;
+}
+
+.follow-link strong {
+  color: #000;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}

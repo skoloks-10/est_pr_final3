@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation, useParams } from "react-router-dom"; // useLocation, useParams 추가
 import { useUser } from "../context/UserContext";
 import { generateImageUrl } from "../utils/imageUrl";
 import defaultProfileImg from "../assets/images/default-profile.svg";
@@ -9,26 +9,43 @@ import "../styles/PostUploadPage.css";
 
 const PostUploadPage = () => {
   const navigate = useNavigate();
-  // useUser()가 null을 반환하더라도 || {} 덕분에 에러가 나지 않습니다.
-  const { user } = useUser() || {};
+  const location = useLocation(); // location 훅으로 state 데이터 접근
+  const { postId } = useParams(); // URL 파라미터에서 postId 가져오기
+
+  // 수정 모드인지, 새로 작성하는 모드인지 확인
+  const isEditMode = !!postId;
+  const postToEdit = location.state?.postToEdit;
+
+  // useUser()가 로딩 상태를 포함하도록 수정했다고 가정합니다.
+  const { user, isLoading } = useUser(); // ◀◀ isLoading 상태 추가
   const fileInputRef = useRef(null);
 
   const [content, setContent] = useState("");
-  const [images, setImages] = useState([]); // File 객체 배열
-  const [imagePreviews, setImagePreviews] = useState([]); // 미리보기 URL 배열
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // 사용자 정보가 없으면 로그인 페이지로 리디렉션하는 로직 추가
+  // 수정 모드일 경우, 기존 데이터로 폼 초기화
   useEffect(() => {
-    // user 객체가 아직 로드되지 않았을 수 있으므로 확인합니다.
-    if (!user) {
-      // useUser Context의 초기 상태가 null일 수 있으므로,
-      // 로딩이 완료될 때까지 기다리거나, 즉시 리디렉션 할 수 있습니다.
-      // 여기서는 user가 없으면 로그인하지 않은 것으로 간주합니다.
-      alert("로그인이 필요한 페이지입니다.");
-      navigate("/login"); // 로그인 페이지 경로가 다를 경우 수정해주세요.
+    if (isEditMode && postToEdit) {
+      setContent(postToEdit.content);
+      if (postToEdit.image) {
+        const imageUrls = postToEdit.image
+          .split(",")
+          .map((img) => generateImageUrl(img));
+        setImagePreviews(imageUrls);
+      }
     }
-  }, [user, navigate]);
+  }, [isEditMode, postToEdit]);
+
+  // 사용자 정보가 없으면 로그인 페이지로 리디렉션
+  useEffect(() => {
+    // 로딩이 끝났는데도 user 정보가 없으면 로그인 페이지로 이동
+    if (!isLoading && !user) {
+      alert("로그인이 필요한 페이지입니다.");
+      navigate("/login");
+    }
+  }, [user, isLoading, navigate]); // ◀◀ 의존성 배열에 isLoading 추가
 
   // 1. 폼 유효성 검사 (내용 또는 이미지가 있으면 업로드 버튼 활성화)
   useEffect(() => {
@@ -62,60 +79,75 @@ const PostUploadPage = () => {
     );
   };
 
-  // 4. 폼 제출 핸들러
+  // 이미지 업로드 로직을 별도 함수로 분리
+  const uploadImages = async (imageFiles) => {
+    const formData = new FormData();
+    imageFiles.forEach((file) => {
+      formData.append("image", file);
+    });
+
+    try {
+      const res = await fetch(
+        "https://dev.wenivops.co.kr/services/mandarin/image/uploadfiles",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.message || "이미지 업로드에 실패했습니다.");
+      }
+
+      const data = await res.json();
+      console.log("서버 응답 데이터:", data); // 이 부분을 추가하여 실제 응답을 확인하세요.
+
+      // 실제 서버 응답 형식(data.info)을 먼저 확인하도록 수정
+      if (data && Array.isArray(data.info)) {
+        return data.info.map((item) => item.filename).join(",");
+      }
+      if (Array.isArray(data)) {
+        return data.map((item) => item.filename).join(",");
+      }
+      if (data && data.filename) {
+        return data.filename;
+      }
+      throw new Error("이미지 업로드 응답 형식이 올바르지 않습니다.");
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      // 오류를 다시 던져서 handleSubmit에서 처리하도록 함
+      throw error;
+    }
+  };
+
+  // 4. 폼 제출 핸들러 (수정/생성 분기 처리)
   const handleSubmit = async () => {
     if (!isFormValid) return;
 
-    let uploadedImageNames = "";
-    const token = localStorage.getItem("token");
-
-    // Step 1: 이미지가 있으면 서버에 업로드
-    if (images.length > 0) {
-      const formData = new FormData();
-      images.forEach((image) => {
-        formData.append("image", image);
-      });
-
-      // 이미지 업로드 로직 부분 수정
-      try {
-        const res = await fetch(
-          "https://dev.wenivops.co.kr/services/mandarin/image/uploadfiles",
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
-        const data = await res.json();
-        console.log("이미지 업로드 응답:", data); // 응답 구조 확인용
-
-        // 단일 이미지와 다중 이미지를 모두 처리
-        if (Array.isArray(data)) {
-          // 여러 이미지일 경우 (배열)
-          uploadedImageNames = data.map((item) => item.filename).join(",");
-        } else if (data && typeof data === "object" && data.filename) {
-          // 단일 이미지일 경우 (객체)
-          uploadedImageNames = data.filename;
-        } else {
-          console.error("알 수 없는 응답 형식:", data);
-          alert("이미지 업로드 응답 형식이 올바르지 않습니다.");
-          return;
-        }
-      } catch (error) {
-        console.error("이미지 업로드 실패:", error);
-        alert("이미지 업로드에 실패했습니다.");
-        return;
-      }
+    // isEditMode가 true이면 수정 API를, false이면 생성 API를 호출
+    if (isEditMode) {
+      await handleUpdatePost();
+    } else {
+      await handleCreatePost();
     }
+  };
 
-    // Step 2: 게시글 데이터 전송
-    const postData = {
-      post: {
-        content: content,
-        image: uploadedImageNames,
-      },
-    };
-
+  // 기존 게시글 생성 로직
+  const handleCreatePost = async () => {
+    const token = localStorage.getItem("token");
+    let uploadedImageNames = "";
     try {
+      if (images.length > 0) {
+        uploadedImageNames = await uploadImages(images);
+      }
+      const postData = {
+        post: {
+          content: content,
+          image: uploadedImageNames,
+        },
+      };
+
       const res = await fetch(
         "https://dev.wenivops.co.kr/services/mandarin/post",
         {
@@ -127,14 +159,52 @@ const PostUploadPage = () => {
           body: JSON.stringify(postData),
         }
       );
+
       const data = await res.json();
-      if (data.post) {
+      if (res.ok && data.post) {
         navigate(`/profile/${user.accountname}`);
       } else {
-        alert(data.message || "게시글 업로드에 실패했습니다.");
+        throw new Error(data.message || "게시글 업로드에 실패했습니다.");
       }
     } catch (error) {
-      console.error("게시글 업로드 실패:", error);
+      console.error("게시글 작성 실패:", error);
+      alert(error.message);
+    }
+  };
+
+  // 새로운 게시글 수정 로직
+  const handleUpdatePost = async () => {
+    const token = localStorage.getItem("token");
+    // 참고: 이 예제에서는 텍스트만 수정합니다. 이미지 수정은 더 복잡한 로직이 필요합니다.
+    const postData = {
+      post: {
+        content: content,
+        image: postToEdit.image, // 이미지는 기존 값 그대로 사용
+      },
+    };
+
+    try {
+      const res = await fetch(
+        `https://dev.wenivops.co.kr/services/mandarin/post/${postId}`,
+        {
+          method: "PUT", // 수정은 PUT 메소드 사용
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(postData),
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        alert("게시글이 수정되었습니다.");
+        navigate(`/post/${data.post.id}`); // 수정된 게시글 상세 페이지로 이동
+      } else {
+        throw new Error(data.message || "게시글 수정에 실패했습니다.");
+      }
+    } catch (error) {
+      console.error("게시글 수정 실패:", error);
+      alert(error.message);
     }
   };
 
@@ -142,9 +212,9 @@ const PostUploadPage = () => {
     e.target.src = defaultProfileImg;
   };
 
-  // user 데이터가 로드되기 전에는 UI 렌더링을 시도하지 않습니다.
-  if (!user) {
-    return null; // 또는 로딩 스피너 컴포넌트를 보여줄 수 있습니다.
+  // 로딩 중이거나, 로딩이 끝났는데 유저가 없으면 UI를 렌더링하지 않음
+  if (isLoading || !user) {
+    return <div>로딩 중...</div>; // 또는 null을 반환
   }
 
   return (
@@ -165,6 +235,7 @@ const PostUploadPage = () => {
           onError={handleImgError}
           alt="내 프로필"
           className="my-profile-image"
+          crossOrigin="anonymous" // CORS 처리를 위한 속성 추가
         />
         <div className="post-form-area">
           <textarea

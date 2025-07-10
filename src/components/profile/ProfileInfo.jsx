@@ -73,21 +73,24 @@ const ProfileInfo = ({ profile, isMyProfile, onFollowChange }) => {
           <span>followers</span>
         </Link>
 
-        <img
-          // 3. generateImageUrl 함수를 사용하여 올바른 이미지 주소를 생성합니다.
-          src={generateImageUrl(profile.image)}
-          alt="프로필 이미지"
-          className="profile-image"
-          onError={handleImgError} // 4. 로딩 실패 시를 대비한 onError 핸들러를 추가합니다.
-        />
-
-        <Link
-          to={`/profile/${profile.accountname}/followings`}
-          className="count-info"
-        >
-          <p className="count">{profile.followingCount}</p>
-          <span>followings</span>
-        </Link>
+        <div className="profile-image-container">
+          <img
+            src={generateImageUrl(profile.image)}
+            alt={`${profile.username}의 프로필`}
+            className="profile-image"
+            crossOrigin="anonymous"
+            onError={handleImgError}
+          />
+        </div>
+        <div className="profile-follow-info">
+          <Link
+            to={`/profile/${profile.accountname}/followings`}
+            className="count-info"
+          >
+            <p className="count">{profile.followingCount}</p>
+            <span>followings</span>
+          </Link>
+        </div>
       </div>
       <p className="username">{profile.username}</p>
       <p className="accountname">@ {profile.accountname}</p>

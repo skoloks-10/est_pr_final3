@@ -50,13 +50,14 @@ const ProductUploadPage = () => {
     e.preventDefault();
     if (!isFormValid) return;
 
-    // Step 1: 이미지 업로드
-    let uploadedFileName = ""; // 파일 이름만 저장할 변수
-    if (imageFile) {
-      const formData = new FormData();
-      formData.append("image", imageFile);
+    try {
+      let itemImageUrl = ""; // 전체 이미지 URL을 저장할 변수
 
-      try {
+      // Step 1: 이미지 업로드 및 전체 URL 생성
+      if (imageFile) {
+        const formData = new FormData();
+        formData.append("image", imageFile);
+
         const imgRes = await fetch(
           "https://dev.wenivops.co.kr/services/mandarin/image/uploadfile",
           {
@@ -64,47 +65,66 @@ const ProductUploadPage = () => {
             body: formData,
           }
         );
-        const imgData = await imgRes.json();
-        if (imgData.filename) {
-          // 🚨 중요: 전체 URL이 아닌, 응답받은 'filename'만 저장합니다.
-          uploadedFileName = imgData.filename;
-        } else {
-          alert("이미지 업로드에 실패했습니다.");
-          return;
+
+        if (!imgRes.ok) {
+          const errorData = await imgRes.json();
+          throw new Error(errorData.message || "이미지 업로드에 실패했습니다.");
         }
-      } catch (error) {
-        console.error("이미지 업로드 실패:", error);
-        return;
+
+        const imgData = await imgRes.json();
+        console.log("이미지 업로드 응답:", imgData); // 1. 이미지 서버 응답 확인
+        let filename = "";
+
+        // { info: { filename: '...' } } 형식 응답 처리 (단일 파일)
+        if (
+          imgData &&
+          imgData.info &&
+          typeof imgData.info === "object" &&
+          !Array.isArray(imgData.info)
+        ) {
+          filename = imgData.info.filename;
+        }
+        // { info: [...] } 형식 응답 처리 (다중 파일과 호환)
+        else if (
+          imgData &&
+          Array.isArray(imgData.info) &&
+          imgData.info.length > 0
+        ) {
+          filename = imgData.info[0].filename;
+        }
+        // { filename: '...' } 형식 응답 처리 (하위 호환)
+        else if (imgData.filename) {
+          filename = imgData.filename;
+        }
+
+        if (filename) {
+          itemImageUrl = `https://dev.wenivops.co.kr/services/mandarin/${filename}`;
+        } else {
+          throw new Error("서버 응답에서 이미지 파일명을 찾을 수 없습니다.");
+        }
       }
-    }
 
-    // URL 형식 검증 및 접두어 추가
-    let formattedLink = saleLink;
-    if (
-      saleLink &&
-      !saleLink.startsWith("http://") &&
-      !saleLink.startsWith("https://")
-    ) {
-      formattedLink = `https://${saleLink}`;
-    }
+      // URL 형식 검증 및 접두어 추가
+      let formattedLink = saleLink;
+      if (
+        saleLink &&
+        !saleLink.startsWith("http://") &&
+        !saleLink.startsWith("https://")
+      ) {
+        formattedLink = `https://${saleLink}`;
+      }
 
-    // Step 2: 상품 데이터 전송
-    const productData = {
-      product: {
-        itemName: productName,
-        price: parseInt(price.replace(/,/g, ""), 10),
-        link: formattedLink,
-        // 🚨 중요: 가공되지 않은 파일 이름을 전송합니다.
-        itemImage: uploadedFileName,
-      },
-    };
+      // Step 2: 상품 데이터 전송
+      const productData = {
+        product: {
+          itemName: productName,
+          price: parseInt(price.replace(/,/g, ""), 10),
+          link: formattedLink,
+          itemImage: itemImageUrl, // 전체 URL 전송
+        },
+      };
 
-    // 디버깅용 - 서버에 전송하는 데이터 확인
-    console.log("서버에 전송할 데이터:", productData);
-
-    const token = localStorage.getItem("token");
-    try {
-      // API 명세에 따라 POST /product 요청 전송
+      const token = localStorage.getItem("token");
       const productRes = await fetch(
         "https://dev.wenivops.co.kr/services/mandarin/product",
         {
@@ -117,28 +137,23 @@ const ProductUploadPage = () => {
         }
       );
 
-      // 에러 응답 상세 정보 확인
+      const productResult = await productRes.json();
+      console.log("상품 등록 응답:", productResult); // 2. 상품 등록 서버 응답 확인
+
       if (!productRes.ok) {
-        const errorText = await productRes.text();
-        console.error("서버 응답:", errorText);
-        throw new Error(
-          `상품 등록 실패: ${productRes.status} ${productRes.statusText}`
-        );
+        throw new Error(productResult.message || "상품 등록에 실패했습니다.");
       }
 
-      const productResult = await productRes.json();
-
-      // 3. API 응답 처리
       if (productResult.product) {
-        // SUCCESS: 성공 시 프로필 페이지로 이동
         navigate(`/profile/${localStorage.getItem("accountname")}`);
       } else {
-        // FAIL: 실패 시 서버 메시지 표시
-        alert(productResult.message || "상품 등록에 실패했습니다.");
+        throw new Error(
+          productResult.message || "알 수 없는 오류로 상품 등록에 실패했습니다."
+        );
       }
     } catch (error) {
       console.error("상품 등록 중 오류 발생:", error);
-      alert("상품 등록 중 오류가 발생했습니다. 다시 시도해주세요.");
+      alert(error.message);
     }
   };
 

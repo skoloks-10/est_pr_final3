@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/images/full-logo.png";
+import logo from "../assets/images/logo.png";
 import "../styles/SplashScreen.css";
 
 const SplashScreen = () => {

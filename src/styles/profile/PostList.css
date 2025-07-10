@@ -72,23 +72,43 @@ p {
   border-radius: 10px;
   margin-top: 16px;
 }
+
+/* --- 핵심 수정 부분 --- */
 .post-interactions {
   display: flex;
-  gap: 16px;
-  margin-top: 12px;
-  padding-left: 54px;
+  align-items: center;
+  gap: 16px; /* '좋아요'와 '댓글' 사이의 간격 */
+  margin: 12px 0;
+  padding-left: 54px; /* 작성자 프로필 이미지 너비만큼 왼쪽 여백 추가 */
 }
-.post-interactions span {
+
+/* '좋아요' 버튼과 '댓글' 링크를 flex 컨테이너로 만듭니다. */
+.like-button,
+.comment-link {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--text-color-gray);
+  gap: 6px; /* 아이콘과 숫자 사이의 간격 */
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: none; /* 링크 밑줄 제거 */
 }
-.post-interactions img {
+
+/* 아이콘과 숫자의 스타일 */
+.like-button img,
+.comment-link img {
   width: 20px;
   height: 20px;
 }
+
+.like-button span,
+.comment-link span {
+  font-size: 12px;
+  color: #767676;
+}
+/* -------------------- */
+
 .post-date {
   font-size: 10px;
   color: var(--text-color-gray);

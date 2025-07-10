@@ -2,20 +2,21 @@ import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateImageUrl } from "../utils/imageUrl";
 import uploadIcon from "../assets/images/upload-file.png";
-import { useUser } from "../context/UserContext"; // 1. useUser 훅 import
+import { useUser } from "../context/UserContext";
 import "../styles/ProfileEditPage.css";
 
 const ProfileEditPage = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-  const { updateUserProfile } = useUser(); // 2. Context의 업데이트 함수 가져오기
+  const { updateUserProfile } = useUser();
 
   const [image, setImage] = useState("");
-  const [imageFile, setImageFile] = useState(null);
+  const [newImageFile, setNewImageFile] = useState(null);
   const [username, setUsername] = useState("");
   const [accountname, setAccountname] = useState("");
   const [intro, setIntro] = useState("");
 
+  const [usernameError, setUsernameError] = useState("");
   const [accountnameError, setAccountnameError] = useState("");
   const [isFormValid, setIsFormValid] = useState(false);
 
@@ -54,59 +55,67 @@ const ProfileEditPage = () => {
     const isUsernameValid = username.length >= 2 && username.length <= 10;
     const isAccountnameValid = /^[a-zA-Z0-9._]+$/.test(accountname);
 
-    // 계정 ID 유효성 검사 후 API 에러 메시지는 초기화
-    if (accountnameError === "이미 사용중인 계정 ID입니다.") {
-      setAccountnameError("");
-    }
+    setUsernameError(
+      isUsernameValid ? "" : "사용자 이름은 2~10자 이내여야 합니다."
+    );
+    setAccountnameError(
+      isAccountnameValid
+        ? ""
+        : "계정 ID는 영문, 숫자, 밑줄, 마침표만 사용할 수 있습니다."
+    );
 
     setIsFormValid(isUsernameValid && isAccountnameValid);
   }, [username, accountname]);
 
+  // 3. 이미지 변경 핸들러
   const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImageFile(file);
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setNewImageFile(file);
+
       const reader = new FileReader();
-      reader.onloadend = () => setImage(reader.result);
+      reader.onloadend = () => {
+        setImage(reader.result); // 미리보기를 위해 Data URL로 설정
+      };
       reader.readAsDataURL(file);
     }
   };
 
-  // 3. API 명세에 맞춘 폼 제출 핸들러
+  // 4. 폼 제출 핸들러
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!isFormValid) return;
 
-    let finalImageUrl = image.startsWith("https://")
-      ? image.split("/").pop()
-      : image;
-    if (imageFile) {
+    const token = localStorage.getItem("token");
+    // 'image' 상태를 그대로 사용하도록 수정합니다. URL을 자르는 로직을 제거합니다.
+    let finalImageUrl = image;
+
+    if (newImageFile) {
       const formData = new FormData();
-      formData.append("image", imageFile);
+      formData.append("image", newImageFile);
       try {
         const res = await fetch(
           "https://dev.wenivops.co.kr/services/mandarin/image/uploadfile",
           {
             method: "POST",
+            headers: { Authorization: `Bearer ${token}` },
             body: formData,
           }
         );
         const data = await res.json();
-        finalImageUrl = data.filename;
+        console.log("이미지 업로드 서버 응답:", data); // 이미지 업로드 응답 출력
+        if (!res.ok) throw new Error("이미지 업로드 실패");
+        // data.filename이 아닌 data.info.filename을 사용하도록 수정합니다.
+        finalImageUrl = data.info.filename;
       } catch (error) {
         console.error("이미지 업로드에 실패했습니다.", error);
+        alert("이미지 업로드에 실패했습니다.");
         return;
       }
     }
 
-    const token = localStorage.getItem("token");
     const profileData = {
-      user: {
-        username,
-        accountname,
-        intro,
-        image: finalImageUrl,
-      },
+      user: { username, accountname, intro, image: finalImageUrl },
     };
 
     try {
@@ -122,16 +131,16 @@ const ProfileEditPage = () => {
         }
       );
       const data = await res.json();
+      console.log("프로필 수정 서버 응답:", data); // 프로필 수정 응답 출력
 
       if (data.user) {
-        // 3. 수정 성공 시, Context를 통해 전역 프로필 정보 업데이트
         updateUserProfile({
           image: data.user.image,
           accountname: data.user.accountname,
         });
+        localStorage.setItem("accountname", data.user.accountname); // 계정 ID 변경 시 localStorage도 업데이트
         navigate(`/profile/${data.user.accountname}`);
       } else {
-        // FAIL: 실패 시 메시지 확인
         if (data.message === "이미 사용중인 계정 ID입니다.") {
           setAccountnameError(data.message);
         } else {
@@ -166,7 +175,9 @@ const ProfileEditPage = () => {
                 src={
                   image.startsWith("data:") ? image : generateImageUrl(image)
                 }
+                alt="프로필 미리보기"
                 className="profile-image-preview"
+                crossOrigin="anonymous"
               />
               <img
                 src={uploadIcon}
@@ -193,12 +204,7 @@ const ProfileEditPage = () => {
               onChange={(e) => setUsername(e.target.value)}
               placeholder="2~10자 이내여야 합니다."
             />
-            {username.length > 0 &&
-              (username.length < 2 || username.length > 10) && (
-                <p className="error-message">
-                  사용자 이름은 2~10자 이내여야 합니다.
-                </p>
-              )}
+            {usernameError && <p className="error-message">{usernameError}</p>}
           </div>
 
           <div className="input-group">
@@ -213,15 +219,6 @@ const ProfileEditPage = () => {
             {accountnameError && (
               <p className="error-message">{accountnameError}</p>
             )}
-            {accountname.length > 0 && accountname.length < 2 && (
-              <p className="error-message">계정 ID는 2자 이상이어야 합니다.</p>
-            )}
-            {accountname.length > 0 &&
-              !/^[a-zA-Z0-9._]+$/.test(accountname) && (
-                <p className="error-message">
-                  계정 ID는 영문, 숫자, 밑줄, 마침표만 사용할 수 있습니다.
-                </p>
-              )}
           </div>
 
           <div className="input-group">

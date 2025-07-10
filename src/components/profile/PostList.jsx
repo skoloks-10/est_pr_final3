@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react"; // useEffect 추가
+import { Link, useNavigate } from "react-router-dom";
 import { generateImageUrl } from "../../utils/imageUrl";
 import defaultImage from "../../assets/images/basic-profile.png";
 import listIcon from "../../assets/images/icon-list.png";
@@ -8,12 +8,27 @@ import albumIcon from "../../assets/images/icon-album.png";
 import albumIconFill from "../../assets/images/icon-album-fill.png";
 import moreIcon from "../../assets/images/icon-more-vertical.svg";
 import heartIcon from "../../assets/images/icon-heart.png";
+import heartIconFill from "../../assets/images/icon-heart-fill.svg"; // 채워진 하트 아이콘 추가
 import commentIcon from "../../assets/images/icon-message-circle.png";
 import "../../styles/profile/PostList.css";
 
 const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
+  // --- 콘솔 출력 코드 추가 ---
+  useEffect(() => {
+    if (posts && posts.length > 0) {
+      console.log("📄 PostList가 받은 전체 게시물 데이터:", posts);
+
+      // 첫 번째 게시물의 이미지 데이터만 따로 자세히 볼 수 있습니다.
+      console.log("👤 첫 번째 게시물의 작성자 이미지:", posts[0].author.image);
+      console.log("🖼️ 첫 번째 게시물의 본문 이미지:", posts[0].image);
+    }
+  }, [posts]); // posts 배열이 변경될 때마다 이 코드가 실행됩니다.
+  // -------------------------
+
+  const navigate = useNavigate(); // useNavigate 훅 사용
   const myAccountname = localStorage.getItem("accountname");
   const [view, setView] = useState("list");
+  const [isDeleting, setIsDeleting] = useState(false); // 1. 게시글 삭제 로딩 상태 추가
 
   // 모달과 알림창 상태를 하나의 객체로 관리
   const [modalState, setModalState] = useState({
@@ -25,8 +40,19 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
     onConfirmAction: null,
   });
 
-  // 게시글 삭제 API 호출 (예시)
+  // 1. 게시글 수정 페이지로 이동하는 함수 추가
+  const handleEditPost = (post) => {
+    // PostUploadPage를 재사용하되, 수정 모드임을 알리고 post 데이터를 전달
+    navigate(`/post/edit/${post.id}`, { state: { postToEdit: post } });
+  };
+
+  // 2. 게시글 삭제 API 호출 로직 개선
   const handleDeletePost = async (postId) => {
+    if (isDeleting) return; // 중복 실행 방지
+
+    setIsDeleting(true);
+    closeAlert(); // 확인 즉시 알림창 닫기
+
     const token = localStorage.getItem("token");
 
     try {
@@ -41,28 +67,25 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
         }
       );
 
-      // 응답 확인
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.message || "게시글 삭제에 실패했습니다.");
       }
 
-      // 성공 시 UI 업데이트를 위해 부모 컴포넌트에 알림 추가 (prop으로 전달받아야 함)
       alert("게시글이 삭제되었습니다.");
 
-      // onPostDelete prop이 존재한다면 호출
+      // 부모 컴포넌트의 상태를 업데이트하여 UI에서 게시글 제거
       if (typeof onPostDelete === "function") {
         onPostDelete(postId);
       }
     } catch (error) {
       console.error("게시글 삭제 실패:", error);
       alert(error.message);
+    } finally {
+      setIsDeleting(false); // 로딩 상태 해제
     }
-
-    closeAlert();
   };
 
-  // 게시글 신고 API 호출 (예시)
   const handleReportPost = async (postId) => {
     const token = localStorage.getItem("token");
 
@@ -121,7 +144,7 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
       isAlertOpen: true,
       alertMessage: message,
       alertConfirmText: confirmText,
-      onConfirmAction: () => onConfirm, // 함수 자체를 저장
+      onConfirmAction: onConfirm, // 버그 수정: 함수를 직접 할당
     }));
   };
 
@@ -152,7 +175,8 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
                 onConfirm: () => handleDeletePost(post.id),
               }),
           },
-          { text: "수정", action: () => console.log("수정") },
+          // 3. 수정 버튼에 handleEditPost 함수 연결
+          { text: "수정", action: () => handleEditPost(post) },
         ]
       : [
           {
@@ -174,6 +198,55 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
 
   const handleImgError = (e) => {
     e.target.src = defaultImage;
+  };
+
+  // 1. 부모로부터 받은 posts를 내부 상태로 관리합니다.
+  const [postList, setPostList] = useState(posts);
+
+  // 2. posts prop이 변경될 때마다 내부 상태를 업데이트.
+  useEffect(() => {
+    setPostList(posts);
+  }, [posts]);
+
+  // 3. 좋아요 토글 함수 추가
+  const handleLikeToggle = async (postId, isLiked) => {
+    const token = localStorage.getItem("token");
+    const action = isLiked ? "unheart" : "heart";
+    const url = `https://dev.wenivops.co.kr/services/mandarin/post/${postId}/${action}`;
+    const method = isLiked ? "DELETE" : "POST";
+
+    // 먼저 UI를 낙관적으로 업데이트
+    setPostList((currentList) =>
+      currentList.map((p) =>
+        p.id === postId
+          ? {
+              ...p,
+              hearted: !p.hearted,
+              heartCount: p.hearted ? p.heartCount - 1 : p.heartCount + 1,
+            }
+          : p
+      )
+    );
+
+    try {
+      const response = await fetch(url, {
+        method: method,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        throw new Error("좋아요 처리에 실패했습니다.");
+      }
+
+      const result = await response.json();
+      // 서버 응답으로 최종 상태를 다시 업데이트하여 동기화
+      setPostList((currentList) =>
+        currentList.map((p) => (p.id === postId ? result.post : p))
+      );
+    } catch (error) {
+      console.error(error);
+      setPostList(posts);
+    }
   };
 
   return (
@@ -199,7 +272,7 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
           <>
             {view === "list" && (
               <div className="post-list-view">
-                {posts.map((post) => (
+                {postList.map((post) => (
                   <div key={post.id} className="post-item-list">
                     <div className="post-author-info">
                       <Link
@@ -207,10 +280,10 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
                         className="post-author-link"
                       >
                         <img
-                          // 2. generateImageUrl 함수를 사용하여 올바른 URL 생성
                           src={generateImageUrl(post.author.image)}
                           alt={`${post.author.username}의 프로필 이미지`}
                           className="post-author-image"
+                          crossOrigin="anonymous" // 1. 작성자 프로필 이미지에 추가
                           onError={handleImgError}
                         />
                       </Link>
@@ -234,36 +307,41 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
                       </Link>
 
                       {post.image &&
-                        // 1. post.image에 쉼표가 있는지 확인하여 여러 이미지인지 판단
                         (post.image.includes(",") ? (
-                          // 2. 여러 이미지일 경우: 가로 스크롤 갤러리 렌더링
                           <div className="post-image-gallery">
                             {post.image.split(",").map((imgName, index) => (
                               <img
                                 key={index}
-                                src={generateImageUrl(imgName.trim())} // .trim()으로 공백 제거
+                                src={generateImageUrl(imgName.trim())}
                                 alt={`게시물 이미지 ${index + 1}`}
                                 className="gallery-image"
+                                crossOrigin="anonymous" // 2. 갤러리 이미지에 추가
+                                onError={handleImgError}
                               />
                             ))}
                           </div>
                         ) : (
-                          // 3. 단일 이미지일 경우: 기존 방식대로 렌더링
                           <Link to={`/post/${post.id}`}>
                             <img
                               src={generateImageUrl(post.image)}
                               alt="게시물 이미지"
-                              crossOrigin="anonymous" // 이 속성 추가
+                              crossOrigin="anonymous"
                               className="post-image-list"
+                              onError={handleImgError}
                             />
                           </Link>
                         ))}
                     </div>
                     <div className="post-interactions">
+                      {/* 5. 좋아요 버튼에 onClick 이벤트와 동적 className, src를 적용합니다. */}
                       <button
                         className={`like-button ${post.hearted ? "liked" : ""}`}
+                        onClick={() => handleLikeToggle(post.id, post.hearted)}
                       >
-                        <img src={heartIcon} alt="좋아요" />
+                        <img
+                          src={post.hearted ? heartIconFill : heartIcon}
+                          alt="좋아요"
+                        />
                         <span>{post.heartCount}</span>
                       </button>
                       <Link to={`/post/${post.id}`} className="comment-link">
@@ -278,27 +356,23 @@ const PostList = ({ posts = [], showViewToggle = true, onPostDelete }) => {
             )}
             {view === "album" && (
               <div className="post-album-view">
-                {posts.map((post) => {
-                  // 1. 게시물에 이미지가 있는지, 여러 개인지 확인
-                  if (!post.image) return null;
-                  const images = post.image.split(",");
-                  const firstImage = images[0].trim();
-
-                  return (
-                    <Link
-                      to={`/post/${post.id}`}
-                      key={post.id}
-                      className="post-item-album"
-                    >
+                {posts.map((post) => (
+                  <Link
+                    key={post.id}
+                    to={`/post/${post.id}`}
+                    className="post-item-album"
+                  >
+                    {post.image && (
                       <img
-                        // 2. generateImageUrl 함수를 사용하여 썸네일 표시
-                        src={generateImageUrl(firstImage)}
-                        alt="게시물 썸네일"
-                        onError={handleImgError} // 3. 이미지 로딩 실패 처리
+                        src={generateImageUrl(post.image.split(",")[0])}
+                        alt="게시글 썸네일"
+                        className="post-album-image"
+                        crossOrigin="anonymous" // 3. 앨범 뷰 이미지에 추가
+                        onError={handleImgError}
                       />
-                    </Link>
-                  );
-                })}
+                    )}
+                  </Link>
+                ))}
               </div>
             )}
           </>

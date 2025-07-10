@@ -2,59 +2,46 @@ import defaultImage from "../assets/images/basic-profile.png";
 
 // 서버의 기본 URL 정의
 const IMAGE_BASE_URL = "https://dev.wenivops.co.kr/services/mandarin";
-const FULL_URL_PREFIX = "https://dev.wenivops.co.kr";
 
 /**
  * 파일 이름을 완전한 이미지 URL로 변환합니다.
- * URL을 그대로 반환하도록 수정되었습니다.
  * @param {string} imagePath - API로부터 받은 이미지 경로
  * @returns {string} - 완전한 URL 또는 기본 이미지
  */
 export const generateImageUrl = (imagePath) => {
-  console.log("원본 이미지 경로:", imagePath);
-
   // 1. imagePath가 비어있거나, 문자열이 아니면 기본 이미지를 반환합니다.
   if (!imagePath || typeof imagePath !== "string") {
     return defaultImage;
   }
 
   // 2. 여러 이미지가 쉼표로 구분되어 있다면, 첫 번째 이미지만 사용합니다.
-  let targetPath = imagePath;
-  if (imagePath.includes(",")) {
-    targetPath = imagePath.split(",")[0].trim();
+  let targetPath = imagePath.split(",")[0].trim();
+
+  // 3. 이미 완전한 URL인 경우 그대로 반환합니다. (http:// 또는 https://)
+  if (targetPath.startsWith("http")) {
+    // 중복된 URL이 포함된 경우 수정
+    const duplicatePattern = `${IMAGE_BASE_URL}/`;
+    if (targetPath.startsWith(duplicatePattern + "http")) {
+      return targetPath.substring(duplicatePattern.length);
+    }
+    return targetPath;
   }
 
-  // 3. URL이 중복되는 문제 처리
-  const duplicateUrlPattern =
-    /https:\/\/dev\.wenivops\.co\.kr\/services\/mandarin\/https:\/\/dev\.wenivops\.co\.kr\/services\/mandarin\//g;
+  // 4. API 서버의 기본 URL이 중복된 경우 처리
+  const duplicateUrlPattern = new RegExp(
+    `^${IMAGE_BASE_URL}/${IMAGE_BASE_URL}`
+  );
   if (duplicateUrlPattern.test(targetPath)) {
-    targetPath = targetPath.replace(
-      "https://dev.wenivops.co.kr/services/mandarin/",
-      ""
-    );
+    targetPath = targetPath.substring(IMAGE_BASE_URL.length + 1);
   }
 
-  // 4. 이미 완전한 URL 형태이면, 그대로 사용합니다.
-  if (targetPath.startsWith(FULL_URL_PREFIX)) {
-    return targetPath; // URL을 그대로 반환
-  }
-
-  // 5. 경로가 /services/mandarin으로 시작하는지 확인
-  if (targetPath.startsWith("/services/mandarin/")) {
-    return FULL_URL_PREFIX + targetPath; // 전체 URL 형태로 반환
-  }
-
-  // 6. Ellipse.png인 경우 로컬 이미지로 바로 대체
-  if (targetPath === "Ellipse.png" || targetPath === "/Ellipse.png") {
+  // 5. 'Ellipse.png'와 같은 특정 기본 이미지 파일명을 처리합니다.
+  if (targetPath.endsWith("Ellipse.png")) {
     return defaultImage;
   }
 
-  // 7. 최종적으로 완전한 URL을 반환합니다.
-  const path = targetPath.startsWith("/") ? targetPath : `/${targetPath}`;
-  const finalUrl = targetPath.startsWith(FULL_URL_PREFIX)
-    ? targetPath
-    : `${IMAGE_BASE_URL}${path}`;
-
-  console.log("최종 변환된 URL:", finalUrl);
-  return finalUrl;
+  // 6. 최종적으로 완전한 URL을 반환합니다.
+  return `${IMAGE_BASE_URL}/${
+    targetPath.startsWith("/") ? targetPath.substring(1) : targetPath
+  }`;
 };

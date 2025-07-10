@@ -52,6 +52,7 @@ const PostDetailPage = () => {
           }
         );
         const data = await res.json();
+        console.log("댓글 목록 응답:", data); // ◀◀ 댓글 목록 정보 확인
         if (data.comments && data.comments.length > 0) {
           setComments((prev) =>
             skip === 0 ? data.comments : [...prev, ...data.comments]
@@ -81,6 +82,7 @@ const PostDetailPage = () => {
           }
         );
         const postData = await postRes.json();
+        console.log("게시글 정보 응답:", postData); // ◀◀ 게시글 정보 확인
         setPost(postData.post);
         await fetchComments(0); // 첫 댓글 페이지 로드
       } catch (error) {
@@ -327,8 +329,9 @@ const PostDetailPage = () => {
                 <img
                   src={generateImageUrl(post.author.image)}
                   onError={handleImgError}
-                  alt=""
+                  alt={`${post.author.username}의 프로필 이미지`}
                   className="post-author-image"
+                  crossOrigin="anonymous"
                 />
                 <div className="post-author-details">
                   <span className="post-author-name">
@@ -342,13 +345,19 @@ const PostDetailPage = () => {
             </div>
             <div className="post-content-list">
               <p>{post.content}</p>
-              {post.image && (
-                <img
-                  src={generateImageUrl(post.image.split(",")[0])}
-                  alt=""
-                  className="post-image-list"
-                />
-              )}
+              {post.image &&
+                post.image
+                  .split(",")
+                  .map((img, index) => (
+                    <img
+                      key={index}
+                      src={generateImageUrl(img)}
+                      alt={`게시물 이미지 ${index + 1}`}
+                      className="post-image-list"
+                      onError={handleImgError}
+                      crossOrigin="anonymous"
+                    />
+                  ))}
             </div>
             <div className="post-interactions">
               <button className={`like-button ${post.hearted ? "liked" : ""}`}>
@@ -374,8 +383,9 @@ const PostDetailPage = () => {
                 <img
                   src={generateImageUrl(comment.author.image)}
                   onError={handleImgError}
-                  alt=""
+                  alt={`${comment.author.username}의 프로필 이미지`}
                   className="comment-author-img"
+                  crossOrigin="anonymous"
                 />
                 <div className="comment-content-wrap">
                   <div className="comment-author-info">
@@ -406,8 +416,9 @@ const PostDetailPage = () => {
           <img
             src={generateImageUrl(myProfileImage)}
             onError={handleImgError}
-            alt=""
+            alt="내 프로필 이미지"
             className="my-profile-img"
+            crossOrigin="anonymous"
           />
           <input
             type="text"

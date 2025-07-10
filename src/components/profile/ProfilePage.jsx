@@ -12,21 +12,21 @@ const ProfilePage = () => {
   const decodedAccountname = decodeURIComponent(accountname);
   const navigate = useNavigate();
 
-  // 1. 상태 관리 세분화
+  // 상태 관리
   const [profile, setProfile] = useState(null);
   const [products, setProducts] = useState([]);
   const [posts, setPosts] = useState([]);
-  const [isPageLoading, setIsPageLoading] = useState(true); // 전체 페이지 초기 로딩
-  const [isPostsLoading, setIsPostsLoading] = useState(false); // 게시물 추가 로딩
-  const [hasMorePosts, setHasMorePosts] = useState(true); // 더 불러올 게시물이 있는지
-  const [skip, setSkip] = useState(0); // 건너뛸 게시물 수
-  const POST_LIMIT = 10; // 한 번에 불러올 게시물 수
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  const [isPostsLoading, setIsPostsLoading] = useState(false);
+  const [hasMorePosts, setHasMorePosts] = useState(true);
+  const [skip, setSkip] = useState(0);
+  const POST_LIMIT = 10;
 
   const myAccountname = localStorage.getItem("accountname");
   const isMyProfile = decodedAccountname === myAccountname;
 
-  // 2. 게시물만 불러오는 함수 (useCallback으로 최적화)
-  const fetchPosts = useCallback(async () => {
+  // 게시물 추가 로딩 함수
+  const fetchMorePosts = useCallback(async () => {
     if (isPostsLoading || !hasMorePosts) return;
 
     setIsPostsLoading(true);
@@ -45,17 +45,16 @@ const ProfilePage = () => {
         setHasMorePosts(false);
       }
     } catch (error) {
-      console.error("게시물을 불러오는 데 실패했습니다.", error);
+      console.error("게시물을 추가로 불러오는 데 실패했습니다.", error);
     } finally {
       setIsPostsLoading(false);
     }
   }, [decodedAccountname, isPostsLoading, hasMorePosts, skip]);
 
-  // 3. 초기 데이터 로딩 (프로필, 상품, 첫 페이지 게시물)
+  // 초기 데이터 로딩 (프로필, 상품, 첫 게시물) - 단 한 번만 실행
   useEffect(() => {
     const fetchInitialData = async () => {
       setIsPageLoading(true);
-      // 프로필이 바뀔 때마다 상태 초기화
       setProfile(null);
       setProducts([]);
       setPosts([]);
@@ -70,41 +69,35 @@ const ProfilePage = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       try {
-        // 프로필 정보와 상품 정보를 동시에 요청
-        const [profileRes, productRes] = await Promise.all([
+        // 프로필, 상품, 첫 게시물 정보를 동시에 요청
+        const [profileRes, productRes, postRes] = await Promise.all([
           fetch(
             `https://dev.wenivops.co.kr/services/mandarin/profile/${decodedAccountname}`,
-            {
-              headers,
-            }
+            { headers }
           ),
           fetch(
             `https://dev.wenivops.co.kr/services/mandarin/product/${decodedAccountname}`,
-            {
-              headers,
-            }
+            { headers }
+          ),
+          fetch(
+            `https://dev.wenivops.co.kr/services/mandarin/post/${decodedAccountname}/userpost?limit=${POST_LIMIT}&skip=0`,
+            { headers }
           ),
         ]);
 
         const profileData = await profileRes.json();
         const productData = await productRes.json();
+        const postData = await postRes.json();
 
+        // 서버에서 직접 받아온 프로필 객체를 상태에 저장
         setProfile(profileData.profile);
         setProducts(productData.product || []);
 
-        // 프로필, 상품 로딩 후 첫 페이지 게시물 로딩 시작
-        if (profileData.profile) {
-          const initialPostRes = await fetch(
-            `https://dev.wenivops.co.kr/services/mandarin/post/${decodedAccountname}/userpost?limit=${POST_LIMIT}&skip=0`,
-            { headers }
-          );
-          const initialPostData = await initialPostRes.json();
-          if (initialPostData.post && initialPostData.post.length > 0) {
-            setPosts(initialPostData.post);
-            setSkip(initialPostData.post.length);
-          } else {
-            setHasMorePosts(false);
-          }
+        if (postData.post && postData.post.length > 0) {
+          setPosts(postData.post);
+          setSkip(postData.post.length);
+        } else {
+          setHasMorePosts(false);
         }
       } catch (error) {
         console.error("프로필 데이터를 불러오는 데 실패했습니다.", error);
@@ -114,21 +107,22 @@ const ProfilePage = () => {
     };
 
     fetchInitialData();
-  }, [decodedAccountname, navigate]); // accountname이 바뀔 때마다 모든 데이터를 새로 불러옵니다.
+  }, [decodedAccountname, navigate]); // 프로필 주인이 바뀔 때만 모든 데이터를 새로고침
 
-  // 4. 스크롤 이벤트 핸들러
+  // 스크롤 이벤트 핸들러
   useEffect(() => {
     const handleScroll = () => {
       if (
         window.innerHeight + document.documentElement.scrollTop >=
-        document.documentElement.offsetHeight - 200
+          document.documentElement.offsetHeight - 200 &&
+        !isPostsLoading
       ) {
-        fetchPosts();
+        fetchMorePosts();
       }
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [fetchPosts]);
+  }, [fetchMorePosts, isPostsLoading]);
 
   // 사용자 프로필 최신 정보 가져오기
   useEffect(() => {
@@ -175,6 +169,13 @@ const ProfilePage = () => {
     );
   };
 
+  // 1. 상품 삭제 처리 함수 추가
+  const handleProductDelete = (deletedProductId) => {
+    setProducts((prevProducts) =>
+      prevProducts.filter((product) => product.id !== deletedProductId)
+    );
+  };
+
   if (isPageLoading)
     return <div className="loading-indicator">프로필을 불러오는 중...</div>;
 
@@ -189,7 +190,11 @@ const ProfilePage = () => {
             {products && products.length > 0 && (
               <section className="product-section">
                 <h2 className="section-title">판매 중인 상품</h2>
-                <ProductList products={products} />
+                {/* 2. ProductList에 onProductDelete prop 전달 */}
+                <ProductList
+                  products={products}
+                  onProductDelete={handleProductDelete}
+                />
               </section>
             )}
 

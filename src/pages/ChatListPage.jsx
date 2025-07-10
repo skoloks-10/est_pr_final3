@@ -1,83 +1,83 @@
-import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import Header from "../components/common/Header";
 import Footer from "../components/common/Footer";
-import defaultProfileImg from "../assets/images/basic-profile.png";
+import { generateImageUrl } from "../utils/imageUrl";
+import defaultImage from "../assets/images/basic-profile.png";
 import "../styles/ChatListPage.css";
 
 const ChatListPage = () => {
-  const navigate = useNavigate();
+  const [chatList, setChatList] = useState([]);
 
-  // 채팅 목록 더미 데이터
-  const chatRooms = [
+  // 이미지에 표시된 내용을 기반으로 한 더미 데이터
+  const dummyChatData = [
     {
-      id: 1,
-      profileImage: null,
-      name: "애월읍 위니브 감귤농장",
-      lastMessage: "이번에 정장 언제하맘싯?",
+      id: "weniv_farm",
+      username: "애월읍 위니브 감귤농장",
+      lastMessage: "이번에 정정 언제하맨마씸?",
       date: "2020.10.25",
-      hasUnread: true,
+      userImage: null, // 기본 이미지를 사용합니다.
+      hasNotification: true,
     },
     {
-      id: 2,
-      profileImage: null,
-      name: "제주감귤마을",
-      lastMessage: "깊은 어둠의 존재감, 블스로이스 뉴 블랙 배지...",
+      id: "jeju_tangerine",
+      username: "제주감귤마을",
+      lastMessage: "깊은 어둠의 존재감, 롤스로이스 뉴 블랙 배지...",
       date: "2020.10.25",
-      hasUnread: true,
+      userImage: null,
+      hasNotification: true,
     },
     {
-      id: 3,
-      profileImage: null,
-      name: "누구네 농장 친환경 한라봉",
+      id: "nugune_farm",
+      username: "누구네 농장 친환경 한라봉",
       lastMessage: "내 차는 내가 평가한다. 오픈 이벤트에 참여 하...",
       date: "2020.10.25",
-      hasUnread: false,
+      userImage: null,
+      hasNotification: false,
     },
   ];
 
+  useEffect(() => {
+    setChatList(dummyChatData);
+  }, []);
+
   const handleImgError = (e) => {
-    e.target.src = defaultProfileImg;
+    e.target.src = defaultImage;
   };
 
   return (
-    <div className="chat-list-page">
-      <header className="chat-list-header">
-        <button onClick={() => navigate(-1)} className="back-button">
-          <i className="icon-arrow-left"></i>
-        </button>
-        <div className="header-options">
-          <button className="menu-button">
-            <i className="icon-more-vertical"></i>
-          </button>
-        </div>
-      </header>
-
+    <div className="chat-list-page-container">
+      <Header title="채팅" />
       <main className="chat-list-main">
-        <ul className="chat-list">
-          {chatRooms.map((chat) => (
-            <li key={chat.id} className="chat-item">
-              <Link to={`/chat/${chat.id}`} className="chat-link">
-                <div className="profile-image-wrapper">
-                  {chat.hasUnread && <span className="unread-indicator"></span>}
-                  <img
-                    src={chat.profileImage || defaultProfileImg}
-                    alt={`${chat.name}의 프로필`}
-                    className="profile-image"
-                    onError={handleImgError}
-                  />
-                </div>
-                <div className="chat-info">
-                  <p className="chat-name">{chat.name}</p>
-                  <p className="chat-message">{chat.lastMessage}</p>
-                </div>
-                <p className="chat-date">{chat.date}</p>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {chatList.map((chat) => (
+          <Link
+            to={`/chat/${chat.id}`}
+            key={chat.id}
+            className="chat-item-link"
+          >
+            <div className="chat-item">
+              <div className="profile-image-container">
+                <img
+                  src={generateImageUrl(chat.userImage)}
+                  alt={`${chat.username}의 프로필`}
+                  className="chat-profile-image"
+                  crossOrigin="anonymous"
+                  onError={handleImgError}
+                />
+                {chat.hasNotification && (
+                  <div className="notification-dot"></div>
+                )}
+              </div>
+              <div className="chat-content">
+                <p className="chat-username">{chat.username}</p>
+                <p className="chat-last-message">{chat.lastMessage}</p>
+              </div>
+              <span className="chat-date">{chat.date}</span>
+            </div>
+          </Link>
+        ))}
       </main>
-
-      <Footer activeTab="채팅" />
+      <Footer />
     </div>
   );
 };
