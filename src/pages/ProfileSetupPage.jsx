@@ -239,7 +239,7 @@ const ProfileSetupPage = () => {
         </div>
 
         <button type="submit" className="auth-button" disabled={!isFormValid}>
-          감귤마켓 시작하기
+          중고스왑 시작하기
         </button>
       </form>
     </div>

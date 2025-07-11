@@ -1,9 +1,9 @@
 {
   "name": "mandarin_market",
+  "homepage": "https://skoloks-10.github.io/est_pr_final3",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.0",
   "type": "module",
-  "homepage": "https://skoloks-10.github.io/est_pr_final3/",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
